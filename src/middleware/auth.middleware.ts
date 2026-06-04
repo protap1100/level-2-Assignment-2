@@ -10,7 +10,7 @@ interface AuthPayload extends JwtPayload {
   role: ROLES;
 }
 
-const verifyToken = (...roles: ROLES[]) => {
+const auth = (...roles: ROLES[]) => {
   return async (req: Request, res: Response, next: NextFunction) => {
     try {
       const token = req.headers.authorization;
@@ -65,4 +65,4 @@ const verifyToken = (...roles: ROLES[]) => {
   };
 };
 
-export const authMiddleware = { verifyToken};
+export default auth;

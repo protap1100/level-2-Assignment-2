@@ -1,9 +1,9 @@
 import { Router } from "express";
-import { authMiddleware } from "../../middleware/auth.middleware";
+import auth from "../../middleware/auth.middleware";
 
 const router = Router();
 
-router.get("/test", authMiddleware.verifyToken("maintainer"), (req, res) => {
+router.get("/test", auth("maintainer"), (req, res) => {
   res.json({
     success: true,
     message: "You are authenticated",
