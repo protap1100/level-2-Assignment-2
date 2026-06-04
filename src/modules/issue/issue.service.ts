@@ -6,7 +6,7 @@ const createIssue = async (
     description: string;
     type: "bug" | "feature_request";
   },
-  userId: number
+  userId: number,
 ) => {
   const { title, description, type } = payload;
 
@@ -15,7 +15,7 @@ const createIssue = async (
      (title, description, type, reporter_id)
      VALUES ($1, $2, $3, $4)
      RETURNING *`,
-    [title, description, type, userId]
+    [title, description, type, userId],
   );
 
   return result.rows[0];
@@ -51,9 +51,7 @@ const getAllIssues = async (query: Record<string, unknown>) => {
   const issuesResult = await pool.query(sql, values);
   const issues = issuesResult.rows;
 
-  const reporterIds = [
-    ...new Set(issues.map((issue) => issue.reporter_id)),
-  ];
+  const reporterIds = [...new Set(issues.map((issue) => issue.reporter_id))];
 
   let reportersMap: Record<number, unknown> = {};
 
@@ -64,7 +62,7 @@ const getAllIssues = async (query: Record<string, unknown>) => {
       FROM users
       WHERE id = ANY($1)
       `,
-      [reporterIds]
+      [reporterIds],
     );
 
     reportersMap = usersResult.rows.reduce(
@@ -76,7 +74,7 @@ const getAllIssues = async (query: Record<string, unknown>) => {
         };
         return acc;
       },
-      {} as Record<number, unknown>
+      {} as Record<number, unknown>,
     );
   }
 
@@ -94,7 +92,37 @@ const getAllIssues = async (query: Record<string, unknown>) => {
   return formattedIssues;
 };
 
+const getSingleIssue = async (id: number) => {
+  const issueResult = await pool.query(`SELECT * FROM issues WHERE id = $1`, [
+    id,
+  ]);
+
+  if (issueResult.rows.length === 0) {
+    return null;
+  }
+
+  const issue = issueResult.rows[0];
+
+  const userResult = await pool.query(
+    `SELECT id, name, role FROM users WHERE id = $1`,
+    [issue.reporter_id],
+  );
+
+  const reporter = userResult.rows[0] || null;
+  return {
+    id: issue.id,
+    title: issue.title,
+    description: issue.description,
+    type: issue.type,
+    status: issue.status,
+    reporter,
+    created_at: issue.created_at,
+    updated_at: issue.updated_at,
+  };
+};
+
 export const issueService = {
   createIssue,
-  getAllIssues
+  getAllIssues,
+  getSingleIssue,
 };
