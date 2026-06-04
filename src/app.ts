@@ -3,6 +3,9 @@ import express, {
   type Request,
   type Response,
 } from "express";
+import { userRoute } from "./modules/user/user.route";
+import { authRoute } from "./modules/auth/auth.route";
+import { authTestRoute } from "./modules/auth/auth.test.route";
 
 const app: Application = express();
 
@@ -13,10 +16,12 @@ app.use(express.urlencoded({ extended: true }));
 
 app.get("/user", (req: Request, res: Response) => {
   res.status(200).json({
-    message: "Express sever",
-    author: "Next level",
+    message: "Assignment 2",
+    author: "Next Level Assignment",
   });
 });
 
-
+app.use("/api/users", userRoute);
+app.use("/api/auth", authRoute);
+app.use("/api/auth", authTestRoute);
 export default app;
