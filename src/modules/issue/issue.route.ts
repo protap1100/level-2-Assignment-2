@@ -1,0 +1,10 @@
+import { Router } from "express";
+import auth from "../../middleware/auth.middleware";
+import { issueController } from "./issue.controller";
+
+const router = Router();
+
+router.post("/", auth(), issueController.createIssue);
+router.get("/", issueController.getAllIssues);
+
+export const issueRoute = router;
