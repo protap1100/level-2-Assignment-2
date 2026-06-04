@@ -13,24 +13,25 @@ interface AuthPayload extends JwtPayload {
 const auth = (...roles: ROLES[]) => {
   return async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const token = req.headers.authorization;
+      const authHeader = req.headers.authorization;
 
-      if (!token) {
+      if (!authHeader) {
         return res.status(401).json({
           success: false,
           message: "Unauthorized access",
         });
       }
 
+      const token = Array.isArray(authHeader) ? authHeader[0] : authHeader;
+
       const decoded = jwt.verify(
         token,
-        config.jwt_secret as string
+        config.jwt_secret as string,
       ) as AuthPayload;
 
-      const userData = await pool.query(
-        `SELECT * FROM users WHERE id = $1`,
-        [decoded.id]
-      );
+      const userData = await pool.query(`SELECT * FROM users WHERE id = $1`, [
+        decoded.id,
+      ]);
 
       if (userData.rows.length === 0) {
         return res.status(404).json({
