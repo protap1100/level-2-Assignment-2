@@ -121,8 +121,79 @@ const getSingleIssue = async (id: number) => {
   };
 };
 
+const updateIssue = async (
+  id: number,
+  payload: {
+    title?: string;
+    description?: string;
+    type?: "bug" | "feature_request";
+  },
+  user: { id: number; role: string }
+) => {
+  // 1. Get issue
+  const issueResult = await pool.query(
+    `SELECT * FROM issues WHERE id = $1`,
+    [id]
+  );
+
+  if (issueResult.rows.length === 0) {
+    return null;
+  }
+
+  const issue = issueResult.rows[0];
+
+  // 2. Permission check
+
+  const isMaintainer = user.role === "maintainer";
+  const isOwner = issue.reporter_id === user.id;
+
+  if (!isMaintainer) {
+    // contributor rules
+    if (!isOwner || issue.status !== "open") {
+      return {
+        error: "FORBIDDEN",
+      };
+    }
+  }
+
+  // 3. Build update dynamically
+  const fields: string[] = [];
+  const values: any[] = [];
+
+  if (payload.title) {
+    values.push(payload.title);
+    fields.push(`title = $${values.length}`);
+  }
+
+  if (payload.description) {
+    values.push(payload.description);
+    fields.push(`description = $${values.length}`);
+  }
+
+  if (payload.type) {
+    values.push(payload.type);
+    fields.push(`type = $${values.length}`);
+  }
+
+  // Always update timestamp
+  values.push(id);
+  fields.push(`updated_at = NOW()`);
+
+  const sql = `
+    UPDATE issues
+    SET ${fields.join(", ")}
+    WHERE id = $${values.length}
+    RETURNING *
+  `;
+
+  const updated = await pool.query(sql, values);
+
+  return updated.rows[0];
+};
+
 export const issueService = {
   createIssue,
   getAllIssues,
   getSingleIssue,
+  updateIssue
 };
