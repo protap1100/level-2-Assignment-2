@@ -130,7 +130,6 @@ const updateIssue = async (
   },
   user: { id: number; role: string }
 ) => {
-  // 1. Get issue
   const issueResult = await pool.query(
     `SELECT * FROM issues WHERE id = $1`,
     [id]
@@ -142,13 +141,10 @@ const updateIssue = async (
 
   const issue = issueResult.rows[0];
 
-  // 2. Permission check
-
   const isMaintainer = user.role === "maintainer";
   const isOwner = issue.reporter_id === user.id;
 
   if (!isMaintainer) {
-    // contributor rules
     if (!isOwner || issue.status !== "open") {
       return {
         error: "FORBIDDEN",
@@ -175,7 +171,6 @@ const updateIssue = async (
     fields.push(`type = $${values.length}`);
   }
 
-  // Always update timestamp
   values.push(id);
   fields.push(`updated_at = NOW()`);
 
@@ -192,7 +187,6 @@ const updateIssue = async (
 };
 
 const deleteIssue = async (id: number) => {
-  // 1. Check if issue exists
   const issueResult = await pool.query(
     `SELECT * FROM issues WHERE id = $1`,
     [id]
@@ -201,8 +195,6 @@ const deleteIssue = async (id: number) => {
   if (issueResult.rows.length === 0) {
     return null;
   }
-
-  // 2. Delete issue
   await pool.query(
     `DELETE FROM issues WHERE id = $1`,
     [id]
