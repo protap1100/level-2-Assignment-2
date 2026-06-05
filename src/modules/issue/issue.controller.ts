@@ -4,7 +4,10 @@ import sendResponse from "../../utilities/sendReponse";
 
 const createIssue = async (req: Request, res: Response) => {
   try {
-    const result = await issueService.createIssue(req.body, req.user!.id);
+    const result = await issueService.createIssue(
+      req.body,
+      req.user!.id
+    );
     sendResponse(res, {
       statusCode: 201,
       success: true,
@@ -148,5 +151,5 @@ export const issueController = {
   getAllIssues,
   getSingleIssue,
   updateIssue,
-  deleteIssue,
+  deleteIssue
 };

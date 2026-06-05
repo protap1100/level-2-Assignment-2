@@ -58,10 +58,7 @@ const auth = (...roles: ROLES[]) => {
 
       return next();
     } catch (error) {
-      return res.status(401).json({
-        success: false,
-        message: "Invalid or expired token",
-      });
+      next(error);
     }
   };
 };
