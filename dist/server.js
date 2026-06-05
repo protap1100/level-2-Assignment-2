@@ -274,10 +274,7 @@ var auth = (...roles) => {
       };
       return next();
     } catch (error) {
-      return res.status(401).json({
-        success: false,
-        message: "Invalid or expired token"
-      });
+      next(error);
     }
   };
 };
@@ -445,7 +442,10 @@ var issueService = {
 // src/modules/issue/issue.controller.ts
 var createIssue2 = async (req, res) => {
   try {
-    const result = await issueService.createIssue(req.body, req.user.id);
+    const result = await issueService.createIssue(
+      req.body,
+      req.user.id
+    );
     sendReponse_default(res, {
       statusCode: 201,
       success: true,
@@ -585,6 +585,15 @@ router3.patch("/:id", auth_middleware_default(), issueController.updateIssue);
 router3.delete("/:id", auth_middleware_default("maintainer"), issueController.deleteIssue);
 var issueRoute = router3;
 
+// src/middleware/globalErrorHandler.ts
+var globalErrorHandler = (err, req, res, next) => {
+  res.status(500).json({
+    success: false,
+    message: err.message || "Internal Server Error"
+  });
+};
+var globalErrorHandler_default = globalErrorHandler;
+
 // src/app.ts
 var app = express();
 app.use(express.json());
@@ -599,6 +608,7 @@ app.get("/user", (req, res) => {
 app.use("/api/users", userRoute);
 app.use("/api/auth", authRoute);
 app.use("/api/issues", issueRoute);
+app.use(globalErrorHandler_default);
 var app_default = app;
 
 // src/server.ts

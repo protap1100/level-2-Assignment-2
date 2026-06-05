@@ -14,10 +14,10 @@ app.use(express.json());
 app.use(express.text());
 app.use(express.urlencoded({ extended: true }));
 
-app.get("/user", (req: Request, res: Response) => {
+app.get("/", (req: Request, res: Response) => {
   res.status(200).json({
-    message: "Assignment 2",
-    author: "Next Level Assignment",
+    message: "Assignment 2(Next Level assignment)",
+    author: "Protap Biswas",
   });
 });
 
