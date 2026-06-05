@@ -92,17 +92,30 @@ var userService = {
   createUserInfoDB
 };
 
+// src/utilities/sendReponse.ts
+var sendResponse = (res, data) => {
+  res.status(data.statusCode).json({
+    success: data.success,
+    message: data.message,
+    data: data.data,
+    error: data.error
+  });
+};
+var sendReponse_default = sendResponse;
+
 // src/modules/user/user.controller.ts
 var createUser = async (req, res) => {
   try {
     const result = await userService.createUserInfoDB(req.body);
-    res.status(201).json({
+    sendReponse_default(res, {
+      statusCode: 201,
       success: true,
-      message: "User Created Successfully!",
-      data: result
+      message: "User retrived successfully",
+      data: result.rows
     });
   } catch (error) {
-    res.status(500).json({
+    sendReponse_default(res, {
+      statusCode: 500,
       success: false,
       message: error.message,
       error
@@ -174,30 +187,36 @@ var authServices = {
 var signup = async (req, res) => {
   try {
     const result = await authServices.registerUser(req.body);
-    res.status(201).json({
+    sendReponse_default(res, {
+      statusCode: 201,
       success: true,
       message: "User registered successfully",
-      data: result
+      data: result.rows
     });
   } catch (error) {
-    res.status(500).json({
+    sendReponse_default(res, {
+      statusCode: 500,
       success: false,
-      message: error.message
+      message: error.message,
+      error
     });
   }
 };
 var login = async (req, res) => {
   try {
     const result = await authServices.loginUser(req.body);
-    res.status(200).json({
+    sendReponse_default(res, {
+      statusCode: 201,
       success: true,
       message: "Login successful",
       data: result
     });
   } catch (error) {
-    res.status(401).json({
+    sendReponse_default(res, {
+      statusCode: 500,
       success: false,
-      message: error.message
+      message: error.message,
+      error
     });
   }
 };
@@ -212,7 +231,7 @@ router2.post("/signup", authController.signup);
 router2.post("/login", authController.login);
 var authRoute = router2;
 
-// src/modules/auth/auth.test.route.ts
+// src/modules/issue/issue.route.ts
 import { Router as Router3 } from "express";
 
 // src/middleware/auth.middleware.ts
@@ -263,19 +282,6 @@ var auth = (...roles) => {
   };
 };
 var auth_middleware_default = auth;
-
-// src/modules/auth/auth.test.route.ts
-var router3 = Router3();
-router3.get("/test", auth_middleware_default("maintainer"), (req, res) => {
-  res.json({
-    success: true,
-    message: "You are authenticated",
-    user: req.user
-  });
-});
-
-// src/modules/issue/issue.route.ts
-import { Router as Router4 } from "express";
 
 // src/modules/issue/issue.service.ts
 var createIssue = async (payload, userId) => {
@@ -438,70 +444,129 @@ var issueService = {
 
 // src/modules/issue/issue.controller.ts
 var createIssue2 = async (req, res) => {
-  const result = await issueService.createIssue(req.body, req.user.id);
-  res.status(201).json({
-    success: true,
-    message: "Issue created successfully",
-    data: result
-  });
+  try {
+    const result = await issueService.createIssue(req.body, req.user.id);
+    sendReponse_default(res, {
+      statusCode: 201,
+      success: true,
+      message: "Issue created successfully",
+      data: result
+    });
+  } catch (error) {
+    sendReponse_default(res, {
+      statusCode: 500,
+      success: false,
+      message: error.message || "Failed to create issue",
+      data: null
+    });
+  }
 };
 var getAllIssues2 = async (req, res) => {
-  const result = await issueService.getAllIssues(req.query);
-  res.status(200).json({
-    success: true,
-    message: "Issues retrived successfully",
-    data: result
-  });
+  try {
+    const result = await issueService.getAllIssues(req.query);
+    sendReponse_default(res, {
+      statusCode: 200,
+      success: true,
+      message: "Issues retrieved successfully",
+      data: result
+    });
+  } catch (error) {
+    sendReponse_default(res, {
+      statusCode: 500,
+      success: false,
+      message: error.message || "Failed to fetch issues",
+      data: null
+    });
+  }
 };
 var getSingleIssue2 = async (req, res) => {
-  const id = Number(req.params.id);
-  const result = await issueService.getSingleIssue(id);
-  if (!result) {
-    return res.status(404).json({
+  try {
+    const id = Number(req.params.id);
+    const result = await issueService.getSingleIssue(id);
+    if (!result) {
+      return sendReponse_default(res, {
+        statusCode: 404,
+        success: false,
+        message: "Issue not found",
+        data: null
+      });
+    }
+    sendReponse_default(res, {
+      statusCode: 200,
+      success: true,
+      message: "Issue retrieved successfully",
+      data: result
+    });
+  } catch (error) {
+    sendReponse_default(res, {
+      statusCode: 500,
       success: false,
-      message: "Issue not found"
+      message: error.message || "Failed to get issue",
+      data: null
     });
   }
-  res.status(200).json({
-    success: true,
-    message: "Issue retrived successfully",
-    data: result
-  });
 };
 var updateIssue2 = async (req, res) => {
-  const id = Number(req.params.id);
-  const result = await issueService.updateIssue(id, req.body, req.user);
-  if (result?.error === "FORBIDDEN") {
-    return res.status(403).json({
+  try {
+    const id = Number(req.params.id);
+    const result = await issueService.updateIssue(id, req.body, req.user);
+    if (result?.error === "FORBIDDEN") {
+      return sendReponse_default(res, {
+        statusCode: 403,
+        success: false,
+        message: "You do not have permission to update this issue",
+        data: null
+      });
+    }
+    if (!result) {
+      return sendReponse_default(res, {
+        statusCode: 404,
+        success: false,
+        message: "Issue not found",
+        data: null
+      });
+    }
+    return sendReponse_default(res, {
+      statusCode: 200,
+      success: true,
+      message: "Issue updated successfully",
+      data: result
+    });
+  } catch (error) {
+    return sendReponse_default(res, {
+      statusCode: 500,
       success: false,
-      message: "You do not have permission to update this issue"
+      message: error.message || "Failed to update issue",
+      data: null
     });
   }
-  if (!result) {
-    return res.status(404).json({
-      success: false,
-      message: "Issue not found"
-    });
-  }
-  return res.status(200).json({
-    success: true,
-    message: "Issue updated successfully",
-    data: result
-  });
 };
 var deleteIssue2 = async (req, res) => {
-  const id = Number(req.params.id);
-  const result = await issueService.deleteIssue(id);
-  if (!result) {
-    return res.status(404).json({
+  try {
+    const id = Number(req.params.id);
+    const result = await issueService.deleteIssue(id);
+    if (!result) {
+      return sendReponse_default(res, {
+        statusCode: 404,
+        success: false,
+        message: "Issue not found",
+        data: null
+      });
+    }
+    return sendReponse_default(res, {
+      statusCode: 200,
+      success: true,
+      message: "Issue deleted successfully",
+      data: null
+    });
+  } catch (error) {
+    return sendReponse_default(res, {
+      statusCode: 500,
       success: false,
-      message: "Issue not found"
+      message: error.message || "Failed to delete issue",
+      data: null
     });
   }
-  return res.status(200).json({
-    success: true,
-    message: "Issue deleted successfully"
-  });
 };
 var issueController = {
   createIssue: createIssue2,
@@ -512,13 +577,13 @@ var issueController = {
 };
 
 // src/modules/issue/issue.route.ts
-var router4 = Router4();
-router4.post("/", auth_middleware_default(), issueController.createIssue);
-router4.get("/", issueController.getAllIssues);
-router4.get("/:id", issueController.getSingleIssue);
-router4.patch("/:id", auth_middleware_default(), issueController.updateIssue);
-router4.delete("/:id", auth_middleware_default("maintainer"), issueController.deleteIssue);
-var issueRoute = router4;
+var router3 = Router3();
+router3.post("/", auth_middleware_default(), issueController.createIssue);
+router3.get("/", issueController.getAllIssues);
+router3.get("/:id", issueController.getSingleIssue);
+router3.patch("/:id", auth_middleware_default(), issueController.updateIssue);
+router3.delete("/:id", auth_middleware_default("maintainer"), issueController.deleteIssue);
+var issueRoute = router3;
 
 // src/app.ts
 var app = express();

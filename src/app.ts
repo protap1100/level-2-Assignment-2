@@ -9,7 +9,6 @@ import { issueRoute } from "./modules/issue/issue.route";
 
 const app: Application = express();
 
-// Middleware
 app.use(express.json());
 app.use(express.text());
 app.use(express.urlencoded({ extended: true }));
