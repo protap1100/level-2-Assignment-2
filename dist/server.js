@@ -599,10 +599,10 @@ var app = express();
 app.use(express.json());
 app.use(express.text());
 app.use(express.urlencoded({ extended: true }));
-app.get("/user", (req, res) => {
+app.get("/", (req, res) => {
   res.status(200).json({
-    message: "Assignment 2",
-    author: "Next Level Assignment"
+    message: "Assignment 2(Next Level assignment)",
+    author: "Protap Biswas"
   });
 });
 app.use("/api/users", userRoute);
