@@ -21,27 +21,21 @@ const auth = (...roles: ROLES[]) => {
           message: "Unauthorized access",
         });
       }
-
       const token = Array.isArray(authHeader) ? authHeader[0] : authHeader;
-
       const decoded = jwt.verify(
         token,
         config.jwt_secret as string,
       ) as AuthPayload;
-
       const userData = await pool.query(`SELECT * FROM users WHERE id = $1`, [
         decoded.id,
       ]);
-
       if (userData.rows.length === 0) {
         return res.status(404).json({
           success: false,
           message: "User not found",
         });
       }
-
       const user = userData.rows[0];
-
       // Role check
       if (roles.length > 0 && !roles.includes(user.role)) {
         return res.status(403).json({
@@ -55,7 +49,6 @@ const auth = (...roles: ROLES[]) => {
         name: user.name,
         role: user.role,
       };
-
       return next();
     } catch (error) {
       next(error);
